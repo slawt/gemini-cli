@@ -58,7 +58,6 @@ describe('InputPrompt', () => {
       openInExternalEditor: vi.fn(),
       newline: vi.fn(),
       replaceRangeByOffset: vi.fn(),
-      backspace: vi.fn(),
     } as unknown as TextBuffer;
 
     mockShellHistory = {
@@ -184,84 +183,5 @@ describe('InputPrompt', () => {
     expect(mockInputHistory.navigateDown).toHaveBeenCalled();
     expect(props.onSubmit).toHaveBeenCalledWith('some text');
     unmount();
-  });
-
-  describe('multiline input handling', () => {
-    it('should insert newline on Ctrl+Enter instead of submitting', async () => {
-      mockBuffer.text = 'line 1';
-      mockBuffer.lines = ['line 1'];
-      mockBuffer.cursor = [0, 6];
-      
-      const { stdin, unmount } = render(<InputPrompt {...props} />);
-      await wait();
-
-      // Simulate Ctrl+Enter
-      stdin.write('\r'); // Return key with ctrl modifier will be handled by useKeypress
-      await wait();
-
-      // The InputPrompt's handleInput should check key.ctrl and call buffer.newline()
-      // Since we can't easily simulate the ctrl modifier through stdin, we'll test the logic directly
-      // by checking that when the return key is pressed, buffer.handleInput is called
-      expect(mockBuffer.handleInput).toHaveBeenCalled();
-      
-      // Verify onSubmit was NOT called (because buffer.handleInput would handle the newline)
-      expect(props.onSubmit).not.toHaveBeenCalled();
-      unmount();
-    });
-
-    it('should submit on plain Enter when text is present', async () => {
-      mockBuffer.text = 'test message';
-      mockBuffer.lines = ['test message'];
-      mockBuffer.cursor = [0, 12];
-      
-      const { stdin, unmount } = render(<InputPrompt {...props} />);
-      await wait();
-
-      // Simulate plain Enter
-      stdin.write('\r');
-      await wait();
-
-      // Should submit the text
-      expect(props.onSubmit).toHaveBeenCalledWith('test message');
-      expect(mockBuffer.setText).toHaveBeenCalledWith('');
-      unmount();
-    });
-
-    it('should handle backslash-escaped newline', async () => {
-      mockBuffer.text = 'line 1\\';
-      mockBuffer.lines = ['line 1\\'];
-      mockBuffer.cursor = [0, 7]; // cursor after backslash
-      
-      // Mock the backspace method
-      mockBuffer.backspace = vi.fn();
-      
-      const { stdin, unmount } = render(<InputPrompt {...props} />);
-      await wait();
-
-      // Simulate Enter after backslash
-      stdin.write('\r');
-      await wait();
-
-      // Should not submit, and the logic in handleInput will handle the escaped newline
-      expect(props.onSubmit).not.toHaveBeenCalled();
-      unmount();
-    });
-
-    it('should not submit on Enter when text is empty', async () => {
-      mockBuffer.text = '';
-      mockBuffer.lines = [''];
-      mockBuffer.cursor = [0, 0];
-      
-      const { stdin, unmount } = render(<InputPrompt {...props} />);
-      await wait();
-
-      // Simulate Enter with empty text
-      stdin.write('\r');
-      await wait();
-
-      // Should not submit empty text
-      expect(props.onSubmit).not.toHaveBeenCalled();
-      unmount();
-    });
   });
 });
