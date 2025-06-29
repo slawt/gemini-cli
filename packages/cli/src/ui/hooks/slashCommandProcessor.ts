@@ -18,6 +18,7 @@ import {
   MCPServerStatus,
   getMCPDiscoveryState,
   getMCPServerStatus,
+  CodeAssistServer,
 } from '@google/gemini-cli-core';
 import { useSessionStats } from '../contexts/SessionContext.js';
 import {
@@ -113,6 +114,7 @@ export const useSlashCommandProcessor = (
           stats: message.stats,
           lastTurnStats: message.lastTurnStats,
           duration: message.duration,
+          userTier: message.userTier,
         };
       } else if (message.type === MessageType.QUIT) {
         historyItemContent = {
@@ -266,16 +268,45 @@ export const useSlashCommandProcessor = (
         name: 'stats',
         altName: 'usage',
         description: 'check session stats',
-        action: (_mainCommand, _subCommand, _args) => {
+        action: async (_mainCommand, _subCommand, _args) => {
           const now = new Date();
           const { sessionStartTime, cumulative, currentTurn } = session.stats;
           const wallDuration = now.getTime() - sessionStartTime.getTime();
+
+          // Try to get user tier
+          let userTier: string | undefined;
+          try {
+            if (config) {
+              const server = config.getGeminiClient().getContentGenerator();
+              if (server && 'loadCodeAssist' in server) {
+                const loadRes = await (
+                  server as CodeAssistServer
+                ).loadCodeAssist({
+                  cloudaicompanionProject:
+                    process.env.GOOGLE_CLOUD_PROJECT || '',
+                  metadata: {
+                    ideType: 'IDE_UNSPECIFIED',
+                    platform: 'PLATFORM_UNSPECIFIED',
+                    pluginType: 'GEMINI',
+                    duetProject: process.env.GOOGLE_CLOUD_PROJECT || '',
+                  },
+                });
+                if (loadRes?.currentTier) {
+                  userTier = loadRes.currentTier.id;
+                }
+              }
+            }
+          } catch (_err) {
+            // If tier fetch fails, show unknown tier
+            userTier = 'unknown-tier';
+          }
 
           addMessage({
             type: MessageType.STATS,
             stats: cumulative,
             lastTurnStats: currentTurn,
             duration: formatDuration(wallDuration),
+            userTier,
             timestamp: new Date(),
           });
         },

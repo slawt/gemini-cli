@@ -21,6 +21,7 @@ interface StatsDisplayProps {
   stats: CumulativeStats;
   lastTurnStats: CumulativeStats;
   duration: string;
+  userTier?: string;
 }
 
 // --- Main Component ---
@@ -29,6 +30,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
   stats,
   lastTurnStats,
   duration,
+  userTier,
 }) => {
   const lastTurnFormatted: FormattedStats = {
     inputTokens: lastTurnStats.promptTokenCount,
@@ -56,9 +58,41 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
       paddingY={1}
       paddingX={2}
     >
-      <Text bold color={Colors.AccentPurple}>
-        Stats
-      </Text>
+      <Box flexDirection="column">
+        <Box flexDirection="row" justifyContent="space-between">
+          <Text bold color={Colors.AccentPurple}>
+            Stats
+          </Text>
+          {userTier && (
+            <Text
+              color={
+                userTier === 'free-tier' || userTier === 'unknown-tier'
+                  ? Colors.AccentRed
+                  : Colors.AccentGreen
+              }
+              bold
+            >
+              License: {userTier.replace('-tier', '').toUpperCase()}
+            </Text>
+          )}
+        </Box>
+        {userTier === 'free-tier' && (
+          <Box marginTop={1}>
+            <Text color={Colors.AccentRed} italic>
+              ⚠️ Free tier: Google may use your data for training. Run /privacy
+              for details.
+            </Text>
+          </Box>
+        )}
+        {userTier === 'unknown-tier' && (
+          <Box marginTop={1}>
+            <Text color={Colors.AccentRed} italic>
+              ⚠️ Unable to verify license tier. Run /privacy to check your data
+              handling settings.
+            </Text>
+          </Box>
+        )}
+      </Box>
 
       <Box flexDirection="row" justifyContent="space-between" marginTop={1}>
         <StatsColumn

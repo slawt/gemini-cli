@@ -103,6 +103,7 @@ export type HistoryItemStats = HistoryItemBase & {
   stats: CumulativeStats;
   lastTurnStats: CumulativeStats;
   duration: string;
+  userTier?: string;
 };
 
 export type HistoryItemQuit = HistoryItemBase & {
@@ -181,6 +182,7 @@ export type Message =
       stats: CumulativeStats;
       lastTurnStats: CumulativeStats;
       duration: string;
+      userTier?: string;
       content?: string;
     }
   | {
