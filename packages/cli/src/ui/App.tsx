@@ -241,6 +241,9 @@ const App = ({ config, settings, startupWarnings = [] }: AppProps) => {
 
   // Set up Flash fallback handler
   useEffect(() => {
+    if (config.getDisableFlashFallback()) {
+      return;
+    }
     const flashFallbackHandler = async (
       currentModel: string,
       fallbackModel: string,

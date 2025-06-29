@@ -126,6 +126,7 @@ export interface ConfigParameters {
   bugCommand?: BugCommandSettings;
   model: string;
   extensionContextFilePaths?: string[];
+  disableFlashFallback?: boolean;
 }
 
 export class Config {
@@ -166,6 +167,7 @@ export class Config {
   private readonly extensionContextFilePaths: string[];
   private modelSwitchedDuringSession: boolean = false;
   flashFallbackHandler?: FlashFallbackHandler;
+  private readonly disableFlashFallback: boolean;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId;
@@ -207,6 +209,7 @@ export class Config {
     this.bugCommand = params.bugCommand;
     this.model = params.model;
     this.extensionContextFilePaths = params.extensionContextFilePaths ?? [];
+    this.disableFlashFallback = params.disableFlashFallback ?? false;
 
     if (params.contextFileName) {
       setGeminiMdFilename(params.contextFileName);
@@ -439,6 +442,10 @@ export class Config {
 
   getExtensionContextFilePaths(): string[] {
     return this.extensionContextFilePaths;
+  }
+
+  getDisableFlashFallback(): boolean {
+    return this.disableFlashFallback;
   }
 
   async getGitService(): Promise<GitService> {

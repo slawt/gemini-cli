@@ -53,6 +53,7 @@ interface CliArgs {
   telemetryTarget: string | undefined;
   telemetryOtlpEndpoint: string | undefined;
   telemetryLogPrompts: boolean | undefined;
+  disableFlashFallback: boolean | undefined;
 }
 
 async function parseArguments(): Promise<CliArgs> {
@@ -126,6 +127,12 @@ async function parseArguments(): Promise<CliArgs> {
       alias: 'c',
       type: 'boolean',
       description: 'Enables checkpointing of file edits',
+      default: false,
+    })
+    .option('disable-flash-fallback', {
+      type: 'boolean',
+      description:
+        'Disable automatic fallback to Flash model on slow responses.',
       default: false,
     })
     .version(await getCliVersion()) // This will enable the --version flag based on package.json
@@ -235,6 +242,7 @@ export async function loadCliConfig(
         settings.fileFiltering?.enableRecursiveFileSearch,
     },
     checkpointing: argv.checkpointing || settings.checkpointing?.enabled,
+    disableFlashFallback: argv.disableFlashFallback || false,
     proxy:
       process.env.HTTPS_PROXY ||
       process.env.https_proxy ||
